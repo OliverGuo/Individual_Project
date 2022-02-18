@@ -18,6 +18,10 @@ uber$time <- format(as.POSIXct(data$Date/Time),format = "%H:%M:%S") # add time c
 ```
 
 Feb 16th
+
+4:00 pm to 5 pm: working on tidying data and writing cleaned dataset to a new file. 
+
+
 ```{r}
 # separating date and time from Date/Time column
 
@@ -26,6 +30,8 @@ new_uber <- uber %>%
 ```
 
 Feb 17th
+10 am to 11 am installed ggmap, set up Google cloud account and set up the api key.
+
 Ran into this error when playing around: Discrete value supplied to continuous scale. This happens when applying aes to a categorical value when I put the column name in quotes.
 
 Also ran into a problem where get_map() requires additional API authorization but it is resolved by lifting the restriction from the cloud platform.
@@ -48,6 +54,9 @@ ggmap(nyc.map) +
 ```
 
 Feb 18th
+In-class: worked on connecting slider bar input to the zoom ratio to change the map zoom specification.
+
+4 pm to 4:30 pm: working on changing the date format and creating the reactive component of my shiny app.
 ```{r}
 # changed the date format to accomendate sliderInput in Shiny
 new_uber <- uber %>%
