@@ -1,0 +1,75 @@
+---
+title: "Project Documentation"
+output: html_notebook
+---
+Feb 14th
+```{r}
+parse_date("4/1/2015", "%m/%d/%Y")
+# parses our date successfully
+
+parse_time("0:21:00")
+```
+```{r}
+# This is for future reference, for now we are good.
+uber$date <- as.Date(data$Date/Time) # add date column
+uber$time <- format(as.POSIXct(data$Date/Time),format = "%H:%M:%S") # add time column
+# source: https://statisticsglobe.com/split-date-time-column-into-separate-variables-in-r
+
+```
+
+Feb 16th
+```{r}
+# separating date and time from Date/Time column
+
+new_uber <- uber %>%
+  separate('Date/Time', into = c("date", "time"), sep = " ")
+```
+
+Feb 17th
+Ran into this error when playing around: Discrete value supplied to continuous scale. This happens when applying aes to a categorical value when I put the column name in quotes.
+
+Also ran into a problem where get_map() requires additional API authorization but it is resolved by lifting the restriction from the cloud platform.
+
+```{r}
+ggmap(nyc_map) + 
+    geom_point(data = uber, aes(x= Lon,y= Lat), size=0.15,alpha=.3)
+```
+```{r}
+#Run this line before using ggmap
+register_google(key = "AIzaSyAnGi82u7r4pOg8fYXC_dugPcMeiA2OMf8")
+```
+
+```{r}
+nyc.map <- get_map(location= 'Lower Manhattan, New York', 
+                       maptype='roadmap', color='color',source='google',zoom=14)
+
+ggmap(nyc.map) + 
+    geom_point(data = uber, aes(x= Lon,y= Lat), size=0.15,alpha=.3)
+```
+
+Feb 18th
+```{r}
+# changed the date format to accomendate sliderInput in Shiny
+new_uber <- uber %>%
+  separate('Date/Time', into = c("date", "time"), sep = " ") %>%
+  mutate(date = mdy(date))
+```
+
+I was looking into how to connect the date range input to the dataset, but was having a little trouble doing that, might need more research. 
+```{r}
+server <- function(input, output) {
+
+    output$pickupPlot <- renderPlot({
+        nyc.map <- get_map(location= 'Lower Manhattan, New York', 
+                           maptype='roadmap', color='color',source='google', zoom = input$zoom)
+        
+        ggmap(nyc.map) + 
+            geom_point(data = uber, aes(x= Lon,y= Lat), size=0.3,alpha=.3)
+        # specifically select 'uber' based on the date from the input.
+        
+    })
+}
+```
+
+
+
