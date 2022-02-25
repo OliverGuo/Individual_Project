@@ -80,5 +80,51 @@ server <- function(input, output) {
 }
 ```
 
+Feb 19th
+
+2:30pm-3pm
+Playing around with printing the date range using dateRangeinput from Shiny app demo page
+
+8:30pm-9:30pm
+Working on selecting my dataset based on date range and apply to the ploting. 
+```{r}
+#testing selectByDate
+output$dateRangeText  <- renderPrint({
+        start_date <- format(input$dateRange[1], "%Y-%m-%d")
+        end_date <- format(input$dateRange[2], "%Y-%m-%d")
+        selectByDate(uber, start = start_date, end = end_date)
+    })
+# renderPlot
+output$pickupPlot <- renderPlot({
+        start_date <- format(input$dateRange[1], "%Y-%m-%d")
+        end_date <- format(input$dateRange[2], "%Y-%m-%d")
+        uberWithDate <- selectByDate(uber, start = start_date, end = end_date, month = c(5, 6), day = 1:31)
+        
+        nyc.map <- get_map(location= 'Lower Manhattan, New York',
+                           maptype='roadmap', color='color',source='google', zoom = input$zoom)
+
+        ggmap(nyc.map) +
+            geom_point(data = uberWithDate, aes(x= Lon,y= Lat), size=0.3,alpha=.3)
+    })
+```
+
+Next thing I want to work on is make each data point clicable or interactive. 
+
+2/21
+9-9:30pm: researching on how to make ggmap interactive and learned more about reactivity. Found a library called googleway.
+
+2/22
+8:30-9:30am: found leaflet and played around with it. I made a new shiny app to accommodate the new package and shinydashboard. 
+```{r}
+library(leaflet)
+
+m <- leaflet("New York City") %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers(lng=-90.321, lat=40.31, popup="The birthplace of R")
+m  # Print the map
+```
+
+
+
 
 
