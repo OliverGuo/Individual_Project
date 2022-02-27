@@ -123,8 +123,25 @@ m <- leaflet("New York City") %>%
   addMarkers(lng=-90.321, lat=40.31, popup="The birthplace of R")
 m  # Print the map
 ```
+2/26
+4-5pm: went to Mingi's Mentor session and worked on mutating the data to show Uber pickups in different regions. 
 
+2/27
+12:30 - 2pm: working on leaflet and made a basic choropleth map of NYC
+```{r}
+library(tigris)
+library(dplyr)
+library(leaflet)
 
+# Downloading the shapefiles for states at the lowest resolution
+nyc <- county_subdivisions("New York", c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+
+nyc %>%
+  leaflet() %>%
+  addTiles() %>%
+  addPolygons(popup=~NAME)
+```
+Next step: clean data to add a county column using revgeocode
 
 
 

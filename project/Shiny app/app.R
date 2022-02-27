@@ -1,10 +1,12 @@
 library(shiny)
 library(tidyverse)
 library(ggmap)
+#library(plotly)
+library(maps)
 library(openair)
 register_google(key = "AIzaSyAnGi82u7r4pOg8fYXC_dugPcMeiA2OMf8")
 uber <- read_csv("uber.csv", na = ".")
-
+#View(uber)
 #print(glimpse(uber))
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -66,11 +68,16 @@ server <- function(input, output) {
 
     output$pickupPlot <- renderPlot({
         
-        nyc.map <- get_map(location = 'New York',
+        nyc_map <- get_map(location = 'New York',
                            maptype='roadmap', color='color',source='google', zoom = zm())
 
-        ggmap(nyc.map) +
+        map <- ggmap(nyc_map)
+        map +
             geom_point(data = uberWithDate(), aes(x= Lon,y= Lat), size=0.3,alpha=.3)
+        
+          #geom_point(data = uberWithDate(), aes(x= Lon,y= Lat), size=0.3,alpha=.3)
+        
+        
 
 
     })
