@@ -17,11 +17,6 @@ uber <- read_csv("uber.csv", na = ".")
 # Downloading the shapefiles for states at the lowest resolution
 
 
-# nyc %>%
-#   leaflet() %>%
-#   addTiles() %>%
-#   addPolygons(popup=~NAME)
-
 latlong2county <- function(pointsDF) {
   # Prepare SpatialPolygons object with one SpatialPolygon
   # per county

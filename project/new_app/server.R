@@ -31,7 +31,11 @@ shinyServer(function(input, output) {
         
         merged <- left_join(nyc, nyc_county, by = c("name" = "counties"))
         # Creating a color palette based on the number range in the total column
-        pal <- colorNumeric("Greens", merged$total)
+        #pal <- colorNumeric("Greens", merged$total)
+        #pal <- colorQuantile("Blues", merged$total, n = 10)
+        bins <- c(0, 200, 3000, 32000, 38000, 500000)
+        pal <- colorBin("Blues", domain = merged$total, bins = bins)
+        
         
         # # Getting rid of rows with NA values
         # # Using the Base R method of filtering subset() because we're dealing with a SpatialPolygonsDataFrame and not a normal data frame, thus filter() wouldn't work
@@ -45,7 +49,7 @@ shinyServer(function(input, output) {
           setView(-73.9, 40.7, zoom = 10) %>%
           addPolygons(data = merged,
                       fillColor = ~pal(merged$total),
-                      fillOpacity = 0.7,
+                      fillOpacity = 0.8,
                       weight = 0.2,
                       smoothFactor = 0.2,
                       popup = ~popup_sb) %>%
