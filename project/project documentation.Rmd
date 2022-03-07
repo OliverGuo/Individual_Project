@@ -156,6 +156,7 @@ library(maptools)
 #   - column 1 contains the longitude in degrees (negative in the US)
 #   - column 2 contains the latitude in degrees
 
+# latlong2county returns the county based on lat and lon
 latlong2county <- function(pointsDF) {
     # Prepare SpatialPolygons object with one SpatialPolygon
     # per county
@@ -184,6 +185,7 @@ latlong2county(as.data.frame(head(select(uber, c("Lon", "Lat")))))
 ```
 Ran into this problem where tidyverse also has a function map, so we need to use maps::map
 
+The code below renders a choropleth map
 ```{r}
 library(tidyverse)
 library(sp)
@@ -194,33 +196,29 @@ library(stringr)
 library(maps)
 library(maptools)
 
-#uber <- read_csv("uber_county.csv")
-#nyc <- county_subdivisions("New York", c("Bronx", "Kings", "New York", "Queens", "Richmond"))
-all_counties <- filter(counties("New York"), NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
-nyc <- mutate(all_counties, name = tolower(all_counties$NAME))
+uber <- read_csv("uber_county.csv")
+nyc_counties <- filter(counties("New York"), NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+# nyc converts all county names to lowercase
+nyc <- mutate(nyc_counties, name = tolower(all_counties$NAME))
 
-nyc_county <- uber %>%
+# df_uber_with_county filters trips that happen in NYC only and count their occurences across counties
+df_uber_with_county <- uber %>%
   filter(counties %in% c("bronx", "kings", "new york", "queens", "richmond")) %>%
   group_by(counties) %>%
   summarize(total=n())
-
-
-
-# glimpse(nyc_county)
-
-# Now we use the Tigris function geo_join to bring together 
-# the states shapefile and the sb_states dataframe -- STUSPS and state 
-# are the two columns they'll be joined by
-
-merged <- left_join(nyc, nyc_county, by = c("name" = "counties"))
-glimpse(merged)
+        
+        
+# merged merges the dataframe and county geospacial data
+merged <- left_join(nyc, df_uber_with_county, by = c("name" = "counties"))
 # Creating a color palette based on the number range in the total column
-pal <- colorNumeric("Greens", merged$total)
- 
+
+bins <- c(0, 200, 3000, 32000, 38000, 500000)
+pal <- colorBin("Blues", domain = merged$total, bins = bins)
+
+
 
 # # Getting rid of rows with NA values
-# # Using the Base R method of filtering subset() because we're dealing with a SpatialPolygonsDataFrame and not a normal data frame, thus filter() wouldn't work
-# 
+
 merged <- subset(merged, !is.na(total))
 
 # Setting up the pop up text
@@ -239,9 +237,41 @@ leaflet(merged) %>%
             pal = pal,
             values = merged$total,
             title = "Pickups frequency")
-#sum(is.na(new_uber$counties))
+
 ```
 
-Next: 
+3/5
+4-5pm
+number of pickups based on date
+```{r}
+df_uber_date <- uber %>%
+    group_by(date) %>%
+    summarize(total=n())
+glimpse(df_uber_date)
 
+p <- ggplot(df_uber_date, aes(x=date, y=total)) +
+  geom_line()
 
+p + scale_x_date(limit=c(as.Date("2014-06-01"), as.Date("2014-06-10")), date_labels = "%b %d")
+```
+3/6
+11-12
+number of pickups based on time
+```{r}
+library(hms)
+df_uber_time <- uber %>%
+    group_by(time) %>%
+    summarize(total=n())
+glimpse(df_uber_time)
+
+p <- ggplot(df_uber_time, aes(x=time, y=total)) +
+  geom_line() +
+  geom_path() +
+  scale_x_time(limit=c(as_hms("00:00:00"),as_hms("07:00:00")))
+
+p
+```
+
+Plan: add a feature that allow users to change time and date range
+
+5-6pm: connected reactive dateRangeInput to the plotoutput. 
