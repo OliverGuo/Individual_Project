@@ -2,6 +2,7 @@ library(shiny)
 library(tidyverse)
 library(shinydashboard)
 library(sp)
+library(chron)
 library(leaflet)
 library(stringr)
 library(maps)
@@ -47,10 +48,12 @@ shinyServer(function(input, output) {
     output$ubermap <- renderLeaflet({
         
         # Setting up the pop up text
-        popup_sb <- paste0("Total pickups in ", as.character(merged$NAME)," : ", as.character(merged$total))
+        popup_sb <- paste0("Total pickups in ",  
+        as.character(merged$NAME)," : ",
+        as.character(merged$total))
         leaflet(merged) %>%
           addProviderTiles(providers$CartoDB.Positron) %>%
-          setView(-73.9, 40.7, zoom = 8) %>%
+          setView(-73.9, 40.7, zoom = 9) %>%
           addPolygons(data = merged,
                       fillColor = ~pal(merged$total),
                       fillOpacity = 0.8,
@@ -63,21 +66,21 @@ shinyServer(function(input, output) {
             values = merged$total,
             title = "Pickups frequency")
     })
-    
     output$Date <- renderPlot({
-        p <- ggplot(df_uber_date, 
-                    aes(x=date, y=total)) +
+        p <- ggplot(df_uber_date,
+                    aes(x = date, y = total)) +
+            geom_line(color="steelblue") +
             geom_point()
-        
-        p + scale_x_date(limit=c(as.Date(input$dateRange[1]), as.Date(input$dateRange[2])),
+        p + scale_x_date(limit = c(as.Date(input$dateRange[1]), 
+        as.Date(input$dateRange[2])),
                          date_labels = "%b %d")
     })
     output$Time <- renderPlot({
         p <- ggplot(df_uber_time, 
-                    aes(x=time, y=total)) +
+                    aes(x = time, y = total)) +
             geom_line() +
             geom_path() +
-            scale_x_time(limit=c(as_hms("00:00:00"),as_hms("07:00:00")))
+            scale_x_time(limit = c(as_hms(input$timeStart), as_hms(input$timeEnd)))
         p
     })
 

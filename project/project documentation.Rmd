@@ -275,3 +275,24 @@ p
 Plan: add a feature that allow users to change time and date range
 
 5-6pm: connected reactive dateRangeInput to the plotoutput. 
+
+3/8
+8:30-9:30am: changed the line color to steelblue
+added a sliderInput that allow users to select time range.
+
+3/9
+8-8:30 pm: working on sliderInput
+```{r}
+library(hms)
+df_uber_time <- uber %>%
+    group_by(time) %>%
+    summarize(total=n())
+glimpse(df_uber_time)
+class(df_uber_time$time)
+```
+9:47pm: found out that it was impossible to use hms/difftime object on sliderInput. So I used ShinyTime instead which takes a datetime or hms object and retrieve a value of the same data type.
+```{r}
+timeInput("timeStart", "Start:", 
+                      value = as_hms("00:00:00"))
+```
+
