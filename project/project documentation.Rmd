@@ -243,6 +243,7 @@ leaflet(merged) %>%
 3/5
 4-5pm
 number of pickups based on date
+https://www.r-graph-gallery.com/279-plotting-time-series-with-ggplot2.html
 ```{r}
 df_uber_date <- uber %>%
     group_by(date) %>%
@@ -254,9 +255,14 @@ p <- ggplot(df_uber_date, aes(x=date, y=total)) +
 
 p + scale_x_date(limit=c(as.Date("2014-06-01"), as.Date("2014-06-10")), date_labels = "%b %d")
 ```
+
 3/6
 11-12
 number of pickups based on time
+I used hms class to represent time object. 
+https://hms.tidyverse.org/reference/hms.html
+
+as_hms converts characters into a hms object which can be used on the x axis of the plot.
 ```{r}
 library(hms)
 df_uber_time <- uber %>%
@@ -296,3 +302,13 @@ timeInput("timeStart", "Start:",
                       value = as_hms("00:00:00"))
 ```
 
+March 11th
+10:30 - 11:50: 
+next: allow users to select certain days of the dataframe along with time range. 
+
+dataframe: df_uber
+select_date + time
+
+nav_bars
+
+if time: allow users to select date for leaflet map

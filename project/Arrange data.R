@@ -1,12 +1,16 @@
+library(shiny)
 library(tidyverse)
-library(ggplot2)
+library(shinydashboard)
 library(sp)
-library(dplyr)
-library(tigris)
+library(chron)
 library(leaflet)
 library(stringr)
 library(maps)
 library(maptools)
+library(hms)
+library(tigris)
+library(dplyr)
+library(openair)
 
 
 uber <- read_csv("uber.csv", na = ".")
@@ -43,6 +47,26 @@ testPoints <- data.frame(x = c(-90, -120), y = c(44, 44))
 
 counties <- latlong2county(as.data.frame(select(uber, c("Lon", "Lat"))))
 
-new_uber <- mutate(uber, counties)
+df_uber <- mutate(uber, counties)
+# nyc_counties is a Simple Feature object that contains the geospacial data of counties in NYC
+nyc_counties <- filter(counties("New York"), NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+# nyc converts all county names to lowercase
+nyc <- mutate(nyc_counties, name = tolower(nyc_counties$NAME))
 
-write_csv(new_uber, "uber_county.csv")
+# df_uber_with_county filters trips that happen in NYC only and count their occurences across counties
+df_uber_with_county <- df_uber %>%
+  filter(counties %in% c("bronx", "kings", "new york", "queens", "richmond")) %>%
+  group_by(counties) %>%
+  summarize(total=n())
+# number of pickups based on date
+df_uber_date <- df_uber %>%
+  group_by(date) %>%
+  summarize(total=n())
+# number of pickups based on time
+df_uber_time <- df_uber %>%
+  group_by(time) %>%
+  summarize(total=n())
+
+# merged merges the dataframe and county geospacial data
+merged <- left_join(nyc, df_uber_with_county, by = c("name" = "counties"))
+#write_csv(new_uber, "uber_county.csv")

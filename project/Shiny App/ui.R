@@ -28,14 +28,14 @@ shinyUI(fluidPage(
                 startview = "month",
             ),
             
-            sliderInput(
-              inputId = "timeRange",
-              label = "Please choose the time range",
-              min = period_to_seconds(hms("00:00:00")),
-              max = period_to_seconds(hms("23:59:59")),
-              value = c(period_to_seconds(hms("07:00:00")) , period_to_seconds(hms("17:00:00")) )
-  
-              ),
+            # sliderInput(
+            #   inputId = "timeRange",
+            #   label = "Please choose the time range",
+            #   min = period_to_seconds(hms("00:00:00")),
+            #   max = period_to_seconds(hms("23:59:59")),
+            #   value = c(period_to_seconds(hms("07:00:00")) , period_to_seconds(hms("17:00:00")) )
+            # 
+            #   ),
             
             dateInput("dateInput", "Please choose a date:",
                       value = "2014-06-01",
