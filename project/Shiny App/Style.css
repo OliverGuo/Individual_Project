@@ -1,0 +1,14 @@
+#map_tab {
+  position: fixed;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+#panel {
+  background-color: white;
+  padding: 10px 20px 20px 20px;
+}

@@ -1,0 +1,396 @@
+---
+title: "Project Documentation"
+output: html_notebook
+---
+Name(s) of all authors: Muqi Guo
+Assignment name: Individual Project
+Assignment due date: March 14th
+Written/online sources used: https://rstudio.github.io/leaflet/map_widget.html
+https://www.r-graph-gallery.com/19-map-leafletr.html
+https://journal.r-project.org/archive/2013-1/kahle-wickham.pdf
+https://shiny.rstudio.com/gallery/superzip-example.html
+
+The rest of the sources are listed alongside each code snippet. 
+
+Help obtained (Acknowledgments): Mingi Lee, Prof.Jimenez
+Add the statement: “I confirm that the above list of sources is complete AND that I have not talked to anyone else about the solution to this problem.”
+
+Purpose: The purpose of my project is to explore how New Yorkers navigated NYC using Uber and where do they use it the most.  
+
+Data description: The data contains Uber pickups from 2014 to 2015 varied by date, location details and base ID.  
+
+How was the data collected: The data is from Kaggle and the specific collecting method is unclear.
+
+Who are the users that this visualization was made for?
+    This data could be beneficial to Uber drivers who would like to optimize     their performence by visiting the most popular locations.
+
+What questions are you trying to answer? What works?
+Questions that I intend to answer is: How does time or date relates to the number of Uber pickup in NYC and which region uses Uber most frequently.
+    
+I believe that both work since I compared the uber pickup frequencies across neighborhoods in NYC and plotted each pickup location with respect to time. 
+
+What insights did you get from your data?
+I learned that Manhattan is the most popular region for Ubers and that New Yorkers use ubers mostly in the cities.
+
+What needs improvement?
+I could create a choropleth graph based on the date or time. 
+I believe there are also some missing data in the data frames used to create the choropleth map. 
+
+
+I started with playing around with date and time.
+```{r}
+parse_date("4/1/2015", "%m/%d/%Y")
+# parses our date successfully
+
+parse_time("0:21:00")
+```
+```{r}
+# This is for future reference, for now we are good.
+uber$date <- as.Date(data$Date/Time) # add date column
+uber$time <- format(as.POSIXct(data$Date/Time),format = "%H:%M:%S") # add time column
+# source: https://statisticsglobe.com/split-date-time-column-into-separate-variables-in-r
+
+```
+
+Feb 16th
+
+4:00 pm to 5 pm: working on tidying data and writing cleaned dataset to a new file. 
+
+Split date and time apart using separate
+```{r}
+# separating date and time from Date/Time column
+
+new_uber <- uber %>%
+  separate('Date/Time', into = c("date", "time"), sep = " ")
+```
+
+Feb 17th
+10 am to 11 am installed ggmap, set up Google cloud account and set up the api key.
+
+Ran into this error when playing around: Discrete value supplied to continuous scale. This happens when applying aes to a categorical value when I put the column name in quotes.
+
+Also ran into a problem where get_map() requires additional API authorization but it is resolved by lifting the restriction from the cloud platform.
+
+```{r}
+ggmap(nyc_map) + 
+    geom_point(data = uber, aes(x= Lon,y= Lat), size=0.15,alpha=.3)
+```
+```{r}
+#Run this line before using ggmap
+register_google(key = "AIzaSyAnGi82u7r4pOg8fYXC_dugPcMeiA2OMf8")
+```
+
+```{r}
+nyc.map <- get_map(location= 'Lower Manhattan, New York', 
+                       maptype='roadmap', color='color',source='google',zoom=14)
+
+ggmap(nyc.map) + 
+    geom_point(data = uber, aes(x= Lon,y= Lat), size=0.15,alpha=.3)
+```
+
+Feb 18th
+In-class: worked on connecting slider bar input to the zoom ratio to change the map zoom specification.
+
+4 pm to 4:30 pm: working on changing the date format and creating the reactive component of my shiny app.
+```{r}
+# changed the date format to accomendate sliderInput in Shiny
+new_uber <- uber %>%
+  separate('Date/Time', into = c("date", "time"), sep = " ") %>%
+  mutate(date = mdy(date))
+```
+
+I was looking into how to connect the date range input to the dataset, but was having a little trouble doing that, might need more research. 
+```{r}
+server <- function(input, output) {
+
+    output$pickupPlot <- renderPlot({
+        nyc.map <- get_map(location= 'Lower Manhattan, New York', 
+                           maptype='roadmap', color='color',source='google', zoom = input$zoom)
+        
+        ggmap(nyc.map) + 
+            geom_point(data = uber, aes(x= Lon,y= Lat), size=0.3,alpha=.3)
+        # specifically select 'uber' based on the date from the input.
+        
+    })
+}
+```
+
+Feb 19th
+
+2:30pm-3pm
+Playing around with printing the date range using dateRangeinput from Shiny app demo page
+
+8:30pm-9:30pm
+Working on selecting my dataset based on date range and apply to the ploting. 
+```{r}
+#testing selectByDate
+output$dateRangeText  <- renderPrint({
+        start_date <- format(input$dateRange[1], "%Y-%m-%d")
+        end_date <- format(input$dateRange[2], "%Y-%m-%d")
+        selectByDate(uber, start = start_date, end = end_date)
+    })
+# renderPlot
+output$pickupPlot <- renderPlot({
+        start_date <- format(input$dateRange[1], "%Y-%m-%d")
+        end_date <- format(input$dateRange[2], "%Y-%m-%d")
+        uberWithDate <- selectByDate(uber, start = start_date, end = end_date, month = c(5, 6), day = 1:31)
+        
+        nyc.map <- get_map(location= 'Lower Manhattan, New York',
+                           maptype='roadmap', color='color',source='google', zoom = input$zoom)
+
+        ggmap(nyc.map) +
+            geom_point(data = uberWithDate, aes(x= Lon,y= Lat), size=0.3,alpha=.3)
+    })
+```
+
+Next thing I want to work on is make each data point clicable or interactive. 
+
+2/21
+9-9:30pm: researching on how to make ggmap interactive and learned more about reactivity. Found a library called googleway.
+
+I decided to not go with ggmap because leaflet is easier to use and there's more documentations about it. 
+
+2/22
+8:30-9:30am: found leaflet and played around with it. I made a new shiny app to accommodate the new package.
+```{r}
+library(leaflet)
+
+m <- leaflet("New York City") %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers(lng=-90.321, lat=40.31, popup="The birthplace of R")
+m  # Print the map
+```
+2/26
+4-5pm: went to Mingi's Mentor session and worked on mutating the data to show Uber pickups in different regions. 
+
+2/27
+12:30 - 3pm: working on leaflet and made a basic choropleth map of NYC
+```{r}
+library(tigris)
+library(dplyr)
+library(leaflet)
+
+# Downloading the shapefiles for states at the lowest resolution
+nyc <- county_subdivisions("New York", c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+
+nyc %>%
+  leaflet() %>%
+  addTiles() %>%
+  addPolygons(popup=~NAME)
+```
+
+7-9pm: clean data to add a county column using latlong2country
+9:30-11pm: working on joining spatial file with data frame
+source: https://stackoverflow.com/questions/13316185/r-convert-zipcode-or-lat-long-to-county
+
+latlong2county takes the longitude and latitude data and returns a dataframe
+that contains all the counties based on lon and lat.
+```{r}
+library(sp)
+library(dplyr)
+library(stringr)
+library(maps)
+library(maptools)
+
+# The single argument to this function, pointsDF, is a data.frame in which:
+#   - column 1 contains the longitude in degrees (negative in the US)
+#   - column 2 contains the latitude in degrees
+
+# latlong2county returns the county based on lat and lon
+latlong2county <- function(pointsDF) {
+    # Prepare SpatialPolygons object with one SpatialPolygon
+    # per county
+    counties <- maps::map('county', fill=TRUE, col="transparent", plot=FALSE)
+    IDs <- sapply(strsplit(counties$names, ":"), function(x) x[1])
+    counties_sp <- map2SpatialPolygons(counties, IDs=IDs,
+                     proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+    # Convert pointsDF to a SpatialPoints object 
+    pointsSP <- SpatialPoints(pointsDF, 
+                    proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+    # Use 'over' to get _indices_ of the Polygons object containing each point 
+    indices <- over(pointsSP, counties_sp)
+    
+    # Return the county names of the Polygons object containing each point
+    countyNames <- sapply(counties_sp@polygons, function(x) x@ID)
+    result <- c(countyNames[indices])
+    word(result, 2, sep = fixed(","))
+}
+
+# Test the function using points in Wisconsin and Oregon.
+testPoints <- data.frame(x = c(-90, -120), y = c(44, 44))
+
+latlong2county(as.data.frame(head(select(uber, c("Lon", "Lat")))))
+```
+Ran into this problem where tidyverse also has a function map, so we need to use maps::map
+
+The code below renders a choropleth map
+sources: 
+https://learn.r-journalism.com/en/mapping/census_maps/census-maps/
+https://rstudio.github.io/leaflet/shiny.html
+```{r}
+library(tidyverse)
+library(sp)
+library(dplyr)
+library(tigris)
+library(leaflet)
+library(stringr)
+library(maps)
+library(maptools)
+
+uber <- read_csv("uber_county.csv")
+nyc_counties <- filter(counties("New York"), NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+# nyc converts all county names to lowercase
+nyc <- mutate(nyc_counties, name = tolower(all_counties$NAME))
+
+# df_uber_with_county filters trips that happen in NYC only and count their occurences across counties
+df_uber_with_county <- uber %>%
+  filter(counties %in% c("bronx", "kings", "new york", "queens", "richmond")) %>%
+  group_by(counties) %>%
+  summarize(total=n())
+        
+        
+# merged merges the dataframe and county geospacial data
+merged <- left_join(nyc, df_uber_with_county, by = c("name" = "counties"))
+# Creating a color palette based on the number range in the total column
+
+bins <- c(0, 200, 3000, 32000, 38000, 500000)
+pal <- colorBin("Blues", domain = merged$total, bins = bins)
+
+
+
+# # Getting rid of rows with NA values
+
+merged <- subset(merged, !is.na(total))
+
+# Setting up the pop up text
+popup_sb <- paste0("Total pickups in ", as.character(merged$NAME)," : ", as.character(merged$total))
+leaflet(merged) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  setView(-73.9, 40.7, zoom = 10) %>%
+  addPolygons(data = merged,
+              fillColor = ~pal(merged$total),
+              fillOpacity = 0.7,
+              weight = 0.2,
+              smoothFactor = 0.2,
+              popup = ~popup_sb) %>%
+  addLegend(
+            "bottomright",
+            pal = pal,
+            values = merged$total,
+            title = "Pickups frequency")
+
+```
+
+3/5
+4-5pm
+number of pickups based on date
+https://www.r-graph-gallery.com/279-plotting-time-series-with-ggplot2.html
+```{r}
+df_uber_date <- uber %>%
+    group_by(date) %>%
+    summarize(total=n())
+glimpse(df_uber_date)
+
+p <- ggplot(df_uber_date, aes(x=date, y=total)) +
+  geom_line()
+
+p + scale_x_date(limit=c(as.Date("2014-06-01"), as.Date("2014-06-10")), date_labels = "%b %d")
+```
+
+3/6
+11-12
+number of pickups based on time
+I used hms class to represent time object. 
+https://hms.tidyverse.org/reference/hms.html
+
+as_hms converts characters into a hms object which can be used on the x axis of the plot.
+```{r}
+library(hms)
+df_uber_time <- uber %>%
+    group_by(time) %>%
+    summarize(total=n())
+glimpse(df_uber_time)
+
+p <- ggplot(df_uber_time, aes(x=time, y=total)) +
+  geom_line() +
+  geom_path() +
+  scale_x_time(limit=c(as_hms("00:00:00"),as_hms("07:00:00")))
+
+p
+```
+
+Plan: add a feature that allow users to change time and date range
+
+5-6pm: connected reactive dateRangeInput to the plotoutput. 
+
+3/8
+8:30-9:30am: changed the line color to steelblue
+added a sliderInput that allow users to select time range.
+
+3/9
+8-8:30 pm: working on sliderInput
+```{r}
+library(hms)
+df_uber_time <- uber %>%
+    group_by(time) %>%
+    summarize(total=n())
+glimpse(df_uber_time)
+class(df_uber_time$time)
+```
+9:47pm: found out that it was impossible to use hms/difftime object on sliderInput. So I used ShinyTime instead which takes a datetime or hms object and retrieve a value of the same data type.
+https://rdrr.io/cran/shinyTime/man/timeInput.html
+```{r}
+timeInput("timeStart", "Start:", 
+                      value = as_hms("00:00:00"))
+```
+
+March 11th
+10:30 - 11:50: working on writing df_time, df_date and merged object to rds files. 
+
+March 13th
+8:30-9:30: adding titles to graphs
+https://ggplot2.tidyverse.org/reference/labs.html
+```{r}
+# attach the labs to a ggplot object to generate titles
+labs(title = "uber pickup based on time")
+```
+
+nav_bars
+
+Inspiration from the superZip demo in R gallery https://shiny.rstudio.com/gallery/superzip-example.html
+This css code stretch the map to fit the entire screen
+```{css}
+div.map_tab {
+  position: fixed;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 0;
+}
+```
+
+# This piece of code select the rows with the a date and time range
+```{r}
+uber %>% 
+  select(-Base) %>%
+  filter(as.Date(uber$date) == as.Date("2014-06-02") & as_hms(uber$time) >= as_hms("10:00:00") & as_hms(uber$time) <= as_hms("17:00:00"))
+```
+# leaftlet bubble map
+```{r}
+test <- uber %>% 
+  select(-Base) %>%
+  filter(as.Date(uber$date) == as.Date("2014-06-02") & as_hms(uber$time) >= as_hms("10:00:00") & as_hms(uber$time) <= as_hms("17:00:00"))
+
+popup_sb <- paste0("Pickup time ",  " : ", as.character(uber$time))
+
+m <- leaflet(test) %>% addProviderTiles(providers$CartoDB.DarkMatter) %>% 
+  setView(-73.9, 40.7, zoom = 10) %>% 
+  addCircles(~Lon, ~Lat, popup= ~popup_sb, weight = 3, radius=40, 
+                 color="#ffa500", stroke = TRUE, fillOpacity = 0.8) 
+m
+```
+
