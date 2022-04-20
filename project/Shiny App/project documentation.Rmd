@@ -77,7 +77,7 @@ ggmap(nyc_map) +
 ```
 ```{r}
 #Run this line before using ggmap
-register_google(key = "AIzaSyAnGi82u7r4pOg8fYXC_dugPcMeiA2OMf8")
+register_google(key = "apikey")
 ```
 
 ```{r}
