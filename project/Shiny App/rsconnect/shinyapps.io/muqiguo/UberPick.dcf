@@ -1,0 +1,13 @@
+name: UberPick
+title: UberPick
+username:
+account: muqiguo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6166613
+bundleId: 5834738
+url: https://muqiguo.shinyapps.io/UberPick/
+when: 1650899400.2396
+lastSyncTime: 1650899400.23962
+asMultiple: FALSE
+asStatic: FALSE
