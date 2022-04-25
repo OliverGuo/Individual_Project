@@ -59,7 +59,7 @@ Feb 16th
 Split date and time apart using separate
 ```{r}
 # separating date and time from Date/Time column
-
+library(tidyverse)
 new_uber <- uber %>%
   separate('Date/Time', into = c("date", "time"), sep = " ")
 ```
@@ -75,12 +75,17 @@ Also ran into a problem where get_map() requires additional API authorization bu
 ggmap(nyc_map) + 
     geom_point(data = uber, aes(x= Lon,y= Lat), size=0.15,alpha=.3)
 ```
+<<<<<<< Updated upstream
 ```{r}
 #Run this line before using ggmap
 register_google(key = "apikey")
 ```
+=======
+>>>>>>> Stashed changes
 
 ```{r}
+library(ggmap)
+uber <- read_csv("uber-raw-data-jun14.csv")
 nyc.map <- get_map(location= 'Lower Manhattan, New York', 
                        maptype='roadmap', color='color',source='google',zoom=14)
 
@@ -123,6 +128,7 @@ Playing around with printing the date range using dateRangeinput from Shiny app 
 8:30pm-9:30pm
 Working on selecting my dataset based on date range and apply to the ploting. 
 ```{r}
+library(shiny)
 #testing selectByDate
 output$dateRangeText  <- renderPrint({
         start_date <- format(input$dateRange[1], "%Y-%m-%d")
